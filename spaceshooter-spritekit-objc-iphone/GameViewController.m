@@ -33,20 +33,25 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+}
 
-    [super viewDidLoad];
-    
+- (void)viewWillLayoutSubviews
+{
+    [super viewWillLayoutSubviews];
     // Configure the view.
-    SKView * skView = (SKView *)self.view;
-    skView.showsFPS = YES;
-    skView.showsNodeCount = YES;
-    
-    // Create and configure the scene.
-    SKScene * scene = [GameScene sceneWithSize:skView.bounds.size];
-    scene.scaleMode = SKSceneScaleModeAspectFill;
-    
-    // Present the scene.
-    [skView presentScene:scene];
+    // Configure the view after it has been sized for the correct orientation.
+    SKView *skView = (SKView *)self.view;
+    if (!skView.scene) {
+        skView.showsFPS = YES;
+        skView.showsNodeCount = YES;
+        
+        // Create and configure the scene.
+        GameScene *theScene = [GameScene sceneWithSize:skView.bounds.size];
+        theScene.scaleMode = SKSceneScaleModeAspectFill;
+        
+        // Present the scene.
+        [skView presentScene:theScene];
+    }
 }
 
 - (BOOL)shouldAutorotate
