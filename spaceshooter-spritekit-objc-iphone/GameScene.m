@@ -53,6 +53,10 @@
         
 #pragma mark - TBD - Setup the stars to appear as particles
         
+        [self addChild:[self loadEmitterNode:@"stars1"]];
+        [self addChild:[self loadEmitterNode:@"stars2"]];
+        [self addChild:[self loadEmitterNode:@"stars3"]];
+        
 #pragma mark - TBD - Start the actual game
         
     }
@@ -66,6 +70,17 @@
     // Update background (parallax) position
     [_parallaxSpaceDust update:currentTime];
     [_parallaxNodeBackgrounds update:currentTime];
+}
+
+-(SKEmitterNode *)loadEmitterNode:(NSString *)emitterFileName{
+    NSString *emitterPath = [[NSBundle mainBundle] pathForResource:emitterFileName ofType:@"sks"];
+    SKEmitterNode *emitterNode = [NSKeyedUnarchiver unarchiveObjectWithFile:emitterPath];
+    
+    // do some view specific tweaks
+    emitterNode.particlePosition = CGPointMake(self.size.width/2.0, self.size.height/2.0);
+    emitterNode.particlePositionRange = CGVectorMake(self.size.width+100, self.size.height);
+    
+    return emitterNode;
 }
 
 @end
