@@ -6,6 +6,7 @@
 //  Copyright (c) 2015 366. All rights reserved.
 //
 
+@import CoreMotion;
 #import "GameScene.h"
 #import "FMMParallaxNode.h"
 
@@ -14,6 +15,7 @@
     SKSpriteNode *_ship;    //1
     FMMParallaxNode *_parallaxNodeBackgrounds;
     FMMParallaxNode *_parallaxSpaceDust;
+    CMMotionManager *_motionManager;
 }
 
 -(id)initWithSize:(CGSize)size {
@@ -51,6 +53,8 @@
         
 #pragma mark - TBD - Setup the Accelerometer to move the ship
         
+        _motionManager = [[CMMotionManager alloc] init];
+        
 #pragma mark - TBD - Setup the stars to appear as particles
         
         [self addChild:[self loadEmitterNode:@"stars1"]];
@@ -58,6 +62,8 @@
         [self addChild:[self loadEmitterNode:@"stars3"]];
         
 #pragma mark - TBD - Start the actual game
+        
+        [self startTheGame];
         
     }
     return self;
@@ -70,6 +76,7 @@
     // Update background (parallax) position
     [_parallaxSpaceDust update:currentTime];
     [_parallaxNodeBackgrounds update:currentTime];
+    [self updateShipPositionFromMotionManager];
 }
 
 -(SKEmitterNode *)loadEmitterNode:(NSString *)emitterFileName{
@@ -83,4 +90,34 @@
     return emitterNode;
 }
 
+-(void)startTheGame{
+    _ship.hidden = NO;
+    
+    // reset ship position for new game
+    _ship.position = CGPointMake(self.frame.size.width * 0.1, CGRectGetMidY(self.frame));
+    
+    // setup to handle accelerometer readings using CoreMotion Framework
+    [self startMonitoringAcceleration];
+}
+
+-(void)startMonitoringAcceleration{
+    if (_motionManager.accelerometerAvailable) {
+        [_motionManager startAccelerometerUpdates];
+        NSLog(@"accelerometer updates on...");
+    }
+}
+
+-(void)stopMonitoringAcceleration{
+    if (_motionManager.accelerometerAvailable && _motionManager.accelerometerActive) {
+        [_motionManager stopAccelerometerUpdates];
+        NSLog(@"accelerometer updates off...");
+    }
+}
+
+-(void)updateShipPositionFromMotionManager{
+    CMAccelerometerData *data = _motionManager.accelerometerData;
+    if (fabs(data.acceleration.x) > 0.2) {
+        NSLog(@"acceleration value = %f", data.acceleration.x);
+    }
+}
 @end
