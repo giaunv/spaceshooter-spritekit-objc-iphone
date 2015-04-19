@@ -27,6 +27,9 @@
         //3
         self.backgroundColor = [SKColor blackColor];
         
+        // define your physics body around the screen - used by your ship to not bounce off the screen
+        self.physicsBody = [SKPhysicsBody bodyWithEdgeLoopFromRect:self.frame];
+        
 #pragma mark - TBD - Game Backgrounds
         NSArray *parallaxBackgroundNames = @[@"bg_galaxy.png", @"bg_planetsunrise.png",@"bg_spacialanomaly.png", @"bg_spacialanomaly2.png"];
         CGSize planetSizes = CGSizeMake(200.0, 200.0);
@@ -45,6 +48,13 @@
         //4
         _ship = [SKSpriteNode spriteNodeWithImageNamed:@"SpaceFlier_sm_1.png"];
         _ship.position = CGPointMake(self.frame.size.width * 0.1, CGRectGetMidY(self.frame));
+        
+        // move the ship using Sprite Kit's Physics Engine
+        _ship.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:_ship.frame.size];
+        _ship.physicsBody.dynamic = YES;
+        _ship.physicsBody.affectedByGravity = NO;
+        _ship.physicsBody.mass = 0.02;
+        
         [self addChild:_ship];
         
 #pragma mark - TBD - Setup the asteroids
@@ -118,6 +128,7 @@
     CMAccelerometerData *data = _motionManager.accelerometerData;
     if (fabs(data.acceleration.x) > 0.2) {
         NSLog(@"acceleration value = %f", data.acceleration.x);
+        [_ship.physicsBody applyForce:CGVectorMake(0.0, 40.0 * data.acceleration.x)];
     }
 }
 @end
