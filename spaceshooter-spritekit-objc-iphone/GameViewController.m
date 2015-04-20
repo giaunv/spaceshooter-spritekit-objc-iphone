@@ -41,7 +41,7 @@
     // Configure the view.
     // Configure the view after it has been sized for the correct orientation.
     SKView *skView = (SKView *)self.view;
-    if (!skView.scene) {
+    //if (!skView.scene) {
         skView.showsFPS = YES;
         skView.showsNodeCount = YES;
         
@@ -51,7 +51,7 @@
         
         // Present the scene.
         [skView presentScene:theScene];
-    }
+    //}
 }
 
 - (BOOL)shouldAutorotate

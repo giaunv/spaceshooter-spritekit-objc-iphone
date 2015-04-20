@@ -149,10 +149,9 @@
 }
 
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event{
-    NSLog(@"touchesBegan");
     SKSpriteNode *shipLaser = [_shipLasers objectAtIndex:_nextShipLaser];
     _nextShipLaser++;
-    if (_nextShipLaser > _shipLasers.count) {
+    if (_nextShipLaser >= _shipLasers.count) {
         _nextShipLaser = 0;
     }
     
