@@ -26,6 +26,7 @@
     
     NSMutableArray *_shipLasers;
     int _nextShipLaser;
+    int _lives;
 }
 
 -(id)initWithSize:(CGSize)size {
@@ -145,6 +146,36 @@
         
         SKAction *moveAsteroidActionWithDone = [SKAction sequence:@[moveAction, doneAction]];
         [asteroid runAction:moveAsteroidActionWithDone withKey:@"asteroidMoving"];
+    }
+    
+    // check for laser collision with asteroid
+    for (SKSpriteNode *asteroid in _asteroids) {
+        if (asteroid.hidden) {
+            continue;
+        }
+        
+        for (SKSpriteNode *shipLaser in _shipLasers) {
+            if (shipLaser.hidden) {
+                continue;
+            }
+            
+            if ([shipLaser intersectsNode:asteroid]) {
+                shipLaser.hidden = YES;
+                asteroid.hidden = YES;
+                
+                NSLog(@"You just destroyed an asteroid");
+                continue;
+            }
+        }
+        
+        if ([_ship intersectsNode:asteroid]) {
+            asteroid.hidden = YES;
+            SKAction *blink = [SKAction sequence:@[[SKAction fadeOutWithDuration:0.1], [SKAction fadeInWithDuration:0.1]]];
+            SKAction *blinkForTime = [SKAction repeatAction:blink count:4];
+            [_ship runAction:blinkForTime];
+            _lives--;
+            NSLog(@"your ship has been hit!");
+        }
     }
 }
 
