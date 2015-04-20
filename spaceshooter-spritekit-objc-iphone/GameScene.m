@@ -11,6 +11,7 @@
 #import "FMMParallaxNode.h"
 
 #define kNumAsteroids 15
+#define kNumLasers 5
 
 @implementation GameScene
 {
@@ -22,6 +23,9 @@
     NSMutableArray *_asteroids;
     int _nextAsteroid;
     double _nextAsteroidSpwan;
+    
+    NSMutableArray *_shipLasers;
+    int _nextShipLaser;
 }
 
 -(id)initWithSize:(CGSize)size {
@@ -76,6 +80,14 @@
         }
         
 #pragma mark - TBD - Setup the lasers
+        
+        _shipLasers = [[NSMutableArray alloc] initWithCapacity:kNumLasers];
+        for (int i = 0; i < kNumLasers; i++) {
+            SKSpriteNode *shipLaser = [SKSpriteNode spriteNodeWithImageNamed:@"laserbeam_blue"];
+            shipLaser.hidden = YES;
+            [_shipLasers addObject:shipLaser];
+            [self addChild:shipLaser];
+        }
         
 #pragma mark - TBD - Setup the Accelerometer to move the ship
         
@@ -136,6 +148,29 @@
     }
 }
 
+-(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event{
+    NSLog(@"touchesBegan");
+    SKSpriteNode *shipLaser = [_shipLasers objectAtIndex:_nextShipLaser];
+    _nextShipLaser++;
+    if (_nextShipLaser > _shipLasers.count) {
+        _nextShipLaser = 0;
+    }
+    
+    shipLaser.position = CGPointMake(_ship.position.x + shipLaser.size.width/2, _ship.position.y + 0);
+    shipLaser.hidden = NO;
+    [shipLaser removeAllActions];
+    
+    CGPoint location = CGPointMake(self.frame.size.width, _ship.position.y);
+    SKAction *laserMoveAction = [SKAction moveTo:location duration:0.5];
+    
+    SKAction *laserDoneAction = [SKAction runBlock:^{
+        shipLaser.hidden = YES;
+    }];
+    
+    SKAction *moveLaserActionWithDone = [SKAction sequence:@[laserMoveAction, laserDoneAction]];
+    [shipLaser runAction:moveLaserActionWithDone withKey:@"laserFired"];
+}
+
 -(SKEmitterNode *)loadEmitterNode:(NSString *)emitterFileName{
     NSString *emitterPath = [[NSBundle mainBundle] pathForResource:emitterFileName ofType:@"sks"];
     SKEmitterNode *emitterNode = [NSKeyedUnarchiver unarchiveObjectWithFile:emitterPath];
@@ -158,6 +193,10 @@
     
     // reset ship position for new game
     _ship.position = CGPointMake(self.frame.size.width * 0.1, CGRectGetMidY(self.frame));
+    
+    for (SKSpriteNode *laser in _shipLasers) {
+        laser.hidden = YES;
+    }
     
     // setup to handle accelerometer readings using CoreMotion Framework
     [self startMonitoringAcceleration];
