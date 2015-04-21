@@ -13,6 +13,11 @@
 #define kNumAsteroids 15
 #define kNumLasers 5
 
+typedef enum {
+    kEndReasonWin,
+    kEndReasonLose
+} EndReason;
+
 @implementation GameScene
 {
     SKSpriteNode *_ship;    //1
@@ -26,7 +31,11 @@
     
     NSMutableArray *_shipLasers;
     int _nextShipLaser;
+
     int _lives;
+    
+    double _gameOverTime;
+    bool _gameOver;
 }
 
 -(id)initWithSize:(CGSize)size {
@@ -177,9 +186,33 @@
             NSLog(@"your ship has been hit!");
         }
     }
+    
+    if (_lives <= 0) {
+        NSLog(@"You loose...");
+        [self endTheScene:kEndReasonLose];
+    } else if (curTime >= _gameOverTime){
+        NSLog(@"You won...");
+        [self endTheScene:kEndReasonWin];
+    }
 }
 
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event{
+    //check if they touched your Restart Label
+    for (UITouch *touch in touches) {
+        SKNode *n = [self nodeAtPoint:[touch locationInNode:self]];
+        if (n != self && [n.name isEqual: @"restartLabel"]) {
+            [[self childNodeWithName:@"restartLabel"] removeFromParent];
+            [[self childNodeWithName:@"winLoseLabel"] removeFromParent];
+            [self startTheGame];
+            return;
+        }
+    }
+    
+    //do not process anymore touches since it's game over
+    if (_gameOver) {
+        return;
+    }
+    
     SKSpriteNode *shipLaser = [_shipLasers objectAtIndex:_nextShipLaser];
     _nextShipLaser++;
     if (_nextShipLaser >= _shipLasers.count) {
@@ -213,6 +246,11 @@
 }
 
 -(void)startTheGame{
+    _lives = 3;
+    double curTime = CACurrentMediaTime();
+    _gameOverTime = curTime + 30.0;
+    _gameOver = NO;
+    
     _nextAsteroidSpwan = 0;
     
     for (SKSpriteNode *asteroid in _asteroids) {
@@ -256,5 +294,46 @@
 
 -(float)randomValueBetween:(float)low andValue:(float)high{
     return (((float) arc4random() / 0xFFFFFFFFu) * (high - low)) + low;
+}
+
+-(void)endTheScene:(EndReason)endReason{
+    if (_gameOver) {
+        return;
+    }
+    
+    [self removeAllActions];
+    [self stopMonitoringAcceleration];
+    _ship.hidden = YES;
+    _gameOver = YES;
+    
+    NSString *message;
+    if (endReason == kEndReasonWin) {
+        message = @"You win!";
+    } else if (endReason == kEndReasonLose){
+        message = @"You lost!";
+    }
+    
+    SKLabelNode *label;
+    label = [[SKLabelNode alloc] initWithFontNamed:@"Futura-CondensedMedium"];
+    label.name = @"winLoseLabel";
+    label.text = message;
+    label.scale = 0.1;
+    label.position = CGPointMake(self.frame.size.width/2, self.frame.size.height * 0.6);
+    label.fontColor = [SKColor yellowColor];
+    [self addChild:label];
+    
+    SKLabelNode *restartLabel;
+    restartLabel = [[SKLabelNode alloc] initWithFontNamed:@"Futura-CondensedMedium"];
+    restartLabel.name = @"restartLabel";
+    restartLabel.text = @"Play Again?";
+    restartLabel.scale = 0.5;
+    restartLabel.position = CGPointMake(self.frame.size.width/2, self.frame.size.height * 0.4);
+    restartLabel.fontColor = [SKColor yellowColor];
+    [self addChild:restartLabel];
+    
+    SKAction *labelScaleAction = [SKAction scaleTo:1.0 duration:0.5];
+    
+    [restartLabel runAction:labelScaleAction];
+    [label runAction:labelScaleAction];
 }
 @end
