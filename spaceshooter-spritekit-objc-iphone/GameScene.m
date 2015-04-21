@@ -9,6 +9,7 @@
 @import CoreMotion;
 #import "GameScene.h"
 #import "FMMParallaxNode.h"
+@import AVFoundation;
 
 #define kNumAsteroids 15
 #define kNumLasers 5
@@ -36,6 +37,8 @@ typedef enum {
     
     double _gameOverTime;
     bool _gameOver;
+    
+    AVAudioPlayer *_backgroundAudioPlayer;
 }
 
 -(id)initWithSize:(CGSize)size {
@@ -111,6 +114,7 @@ typedef enum {
         
 #pragma mark - TBD - Start the actual game
         
+        [self startBackgroundMusic];
         [self startTheGame];
         
     }
@@ -122,6 +126,8 @@ typedef enum {
     /* Called before each frame is rendered */
     
     // Update background (parallax) position
+    if (_gameOver) return;
+    
     [_parallaxSpaceDust update:currentTime];
     [_parallaxNodeBackgrounds update:currentTime];
     [self updateShipPositionFromMotionManager];
@@ -169,6 +175,8 @@ typedef enum {
             }
             
             if ([shipLaser intersectsNode:asteroid]) {
+                SKAction *asteroidExplosionSound = [SKAction playSoundFileNamed:@"explosion_small.caf" waitForCompletion:NO];
+                [asteroid runAction:asteroidExplosionSound];
                 shipLaser.hidden = YES;
                 asteroid.hidden = YES;
                 
@@ -181,7 +189,8 @@ typedef enum {
             asteroid.hidden = YES;
             SKAction *blink = [SKAction sequence:@[[SKAction fadeOutWithDuration:0.1], [SKAction fadeInWithDuration:0.1]]];
             SKAction *blinkForTime = [SKAction repeatAction:blink count:4];
-            [_ship runAction:blinkForTime];
+            SKAction *shipExplosionSound = [SKAction playSoundFileNamed:@"explosion_large.caf" waitForCompletion:NO];
+            [_ship runAction:[SKAction sequence:@[shipExplosionSound,blinkForTime]]];
             _lives--;
             NSLog(@"your ship has been hit!");
         }
@@ -224,13 +233,14 @@ typedef enum {
     [shipLaser removeAllActions];
     
     CGPoint location = CGPointMake(self.frame.size.width, _ship.position.y);
+    SKAction *laserFireSoundAction = [SKAction playSoundFileNamed:@"laser_ship.caf" waitForCompletion:NO];
     SKAction *laserMoveAction = [SKAction moveTo:location duration:0.5];
     
     SKAction *laserDoneAction = [SKAction runBlock:^{
         shipLaser.hidden = YES;
     }];
     
-    SKAction *moveLaserActionWithDone = [SKAction sequence:@[laserMoveAction, laserDoneAction]];
+    SKAction *moveLaserActionWithDone = [SKAction sequence:@[laserFireSoundAction, laserMoveAction,laserDoneAction]];
     [shipLaser runAction:moveLaserActionWithDone withKey:@"laserFired"];
 }
 
@@ -335,5 +345,22 @@ typedef enum {
     
     [restartLabel runAction:labelScaleAction];
     [label runAction:labelScaleAction];
+}
+
+-(void)startBackgroundMusic
+{
+    NSError *err;
+    NSURL *file = [NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"SpaceGame.caf" ofType:nil]];
+    _backgroundAudioPlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:file error:&err];
+    if (err) {
+        NSLog(@"error in audio play %@",[err userInfo]);
+        return;
+    }
+    [_backgroundAudioPlayer prepareToPlay];
+    
+    // this will play the music infinitely
+    _backgroundAudioPlayer.numberOfLoops = -1;
+    [_backgroundAudioPlayer setVolume:1.0];
+    [_backgroundAudioPlayer play];
 }
 @end
