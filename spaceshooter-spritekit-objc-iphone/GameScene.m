@@ -209,9 +209,12 @@ typedef enum {
     //check if they touched your Restart Label
     for (UITouch *touch in touches) {
         SKNode *n = [self nodeAtPoint:[touch locationInNode:self]];
+        NSLog(n.name);
+        // TODO: Fix restart the game
         if (n != self && [n.name isEqual: @"restartLabel"]) {
             [[self childNodeWithName:@"restartLabel"] removeFromParent];
             [[self childNodeWithName:@"winLoseLabel"] removeFromParent];
+            NSLog(@"Start the game");
             [self startTheGame];
             return;
         }
